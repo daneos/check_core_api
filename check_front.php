@@ -14,6 +14,8 @@
 	$content[] = curl_exec($curl);
 	curl_setopt($curl, CURLOPT_URL, $front_urls[2]);
 	$content[] = curl_exec($curl);
+	curl_close($curl);
+	
 	if($content[0] && $content[1] && $content[2])
 	{
 		$data[] = json_decode($content[0]);
@@ -34,6 +36,5 @@
 		else $output = "FRONT UNKNOWN: Cannot parse JSON.\n";
 	}
 	else $output = "FRONT UNKNOWN: Cannot get JSON data.\n";
-	curl_close($curl);
 	echo $output;
 ?>
