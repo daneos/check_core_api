@@ -9,7 +9,7 @@
 
 	function usage()
 	{
-		echo "Usage: $0 <options>\n";
+		echo "Usage: check_core_api.php <options>\n";
 		echo "Check Core API\n";
 		echo "Options:\n";
 		echo "-u URL (required)\n";
