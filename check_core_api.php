@@ -155,6 +155,30 @@
 					echo "CRITICAL: No task ".$options['t'][$tskc-1]."\n";
 					return $STATE_CRITICAL;
 				}
+				if(in_array('k', array_keys($options)))
+				{
+					if(is_array($options['k']))
+					{
+						$keyc = count($options['k']);
+						while($keyc > 0)
+						{
+							if(!isset($vars[$options['t'][$tskc-1]]->task->$options['k'][$keyc-1]))
+							{
+								echo "CRITICAL: No key ".$options['k'][$keyc-1]." in task ".$options['t'][$tskc-1]."\n";
+								return $STATE_CRITICAL;
+							}
+							$keyc--;
+						}
+					}
+					else 
+					{
+						if(!isset($vars[$options['t'][$tskc-1]]->task->$options['k']))
+						{
+							echo "CRITICAL: No key ".$options['k'][$keyc-1]." in task ".$options['t'][$tskc-1]."\n";
+							return $STATE_CRITICAL;
+						}
+					}
+				}
 				$tskc--;
 			}
 		}
@@ -164,6 +188,30 @@
 			{
 				echo "CRITICAL: No task ".$options['t']."\n";
 				return $STATE_CRITICAL;
+			}
+			if(in_array('k', array_keys($options)))
+			{
+				if(is_array($options['k']))
+				{
+					$keyc = count($options['k']);
+					while($keyc > 0)
+					{
+						if(!isset($vars[$options['t']]->task->$options['k'][$keyc-1]))
+						{
+							echo "CRITICAL: No key ".$options['k'][$keyc-1]." in task ".$options['t']."\n";
+							return $STATE_CRITICAL;
+						}
+						$keyc--;
+					}
+				}
+				else 
+				{
+					if(!isset($vars[$options['t']]->task->$options['k']))
+					{
+						echo "CRITICAL: No key ".$options['k']." in task ".$options['t']."\n";
+						return $STATE_CRITICAL;
+					}
+				}
 			}
 		}
 	}
