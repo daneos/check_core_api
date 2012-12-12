@@ -1,7 +1,8 @@
 #!/usr/bin/php
 <?php
-	$options = getopt("hrdu:a:i:q:t:k:");
 
+	$reverse = false;
+	
 	$STATE_OK=0;
 	$STATE_WARNING=1;
 	$STATE_CRITICAL=2;
@@ -26,11 +27,46 @@
 		echo "-h shows this help message\n";
 	}
 
-	if(in_array('h', array_keys($options)))
+	$options = getopt("hrdu:a:i:q:t:k:");
+	foreach($options as $option=>$val)
 	{
-		usage();
-		return 0;
+		switch($option)
+		{
+			case 'u':
+				$url = $val;
+				break;
+			case 'r':
+				$reverse = true;
+				break;
+			case 'a':
+				$action = $val;
+				break;
+			case 'i':
+				$cts = explode(':', $val);
+				break;
+			case 'q':
+				$qc = $val;
+				break;
+			case 'd':
+				$usersdata = true;
+				break;
+			case 't':
+				$task = $val;
+				break;
+			case 'k':
+				$key = $val;
+				break;
+			case 'h':
+				usage();
+				return 0;
+				break;
+			default:
+				echo "Unknown option: -$option\n";
+				return 1;
+				break;
+		}
 	}
+
 	if(!in_array('u', array_keys($options)))
 	{
 		echo "No URL specified.\n";
@@ -61,15 +97,14 @@
 		echo "CRITICAL: JSON corrupted\n";
 		return $STATE_CRITICAL;
 	}
-	if((!$data->success && !in_array('r', array_keys($options))) || ($data->success && in_array('r', array_keys($options))))
+	if((!$data->success && !$reverse) || ($data->success && $reverse))
 	{
 		echo "CRITICAL: Not succeed\n";
 		return $STATE_CRITICAL;
 	}
 
-	if(in_array('i', array_keys($options)))
+	if(isset($cts))
 	{
-		$cts = explode(':', $options['i']);
 		$count = count($data->data->tasks->items);
 		if(($count < $cts[0]) || ($count > $cts[3]))
 		{
@@ -82,16 +117,16 @@
 			return $STATE_WARNING;
 		}	
 	}
-	if(in_array('a', array_keys($options)))
+	if(isset($action))
 	{
-		if(is_array($options['a']))
+		if(is_array($action))
 		{
-			$actc = count($options['a']);
+			$actc = count($action);
 			while($actc > 0)
 			{
-				if(!isset($data->data->actions->$options['a'][$actc-1]))
+				if(!isset($data->data->actions->$action[$actc-1]))
 				{
-					echo "CRITICAL: Method ".$options['a'][$actc-1]." not exist\n";
+					echo "CRITICAL: Method ".$action[$actc-1]." not exist\n";
 					return $STATE_CRITICAL;
 				}
 				$actc--;
@@ -99,17 +134,17 @@
 		}
 		else
 		{
-			if(!isset($data->data->actions->$options['a']))
+			if(!isset($data->data->actions->$action))
 			{
-				echo "CRITICAL: Method ".$options['a']." not exist\n";
+				echo "CRITICAL: Method ".$action." not exist\n";
 				return $STATE_CRITICAL;
 			}
 		}
 	}
-	if(in_array('q', array_keys($options)))
+	if(isset($qc))
 	{
 		$count = count($data->data);
-		if($options['q'] == '-')
+		if($qc == '-')
 		{
 			if($count <= 0)
 			{
@@ -117,9 +152,9 @@
 				return $STATE_CRITICAL;
 			}
 		}
-		else if($options['q'] < 0)
+		else if($qc < 0)
 		{
-			if($count > -$options['q'])
+			if($count > -$qc)
 			{
 				echo "CRITICAL: $count suggestions\n";
 				return $STATE_CRITICAL;
@@ -127,14 +162,14 @@
 		}
 		else
 		{
-			if($count < $options['q'])
+			if($count < $qc)
 			{
 				echo "CRITICAL: $count suggestions\n";
 				return $STATE_CRITICAL;
 			}
 		}
 	}
-	if(in_array('d', array_keys($options)))
+	if(isset($usersdata))
 	{
 		if(!isset($data->users_data))
 		{
@@ -142,29 +177,29 @@
 			return $STATE_CRITICAL;
 		}
 	}
-	if(in_array('t', array_keys($options)))
+	if(isset($task))
 	{
 		$vars = get_object_vars($data->data);
-		if(is_array($options['t']))
+		if(is_array($task))
 		{
-			$tskc = count($options['t']);
+			$tskc = count($task);
 			while($tskc > 0)
 			{
-				if(!isset($vars[$options['t'][$tskc-1]]->task))
+				if(!isset($vars[$task[$tskc-1]]->task))
 				{
-					echo "CRITICAL: No task ".$options['t'][$tskc-1]."\n";
+					echo "CRITICAL: No task ".$task[$tskc-1]."\n";
 					return $STATE_CRITICAL;
 				}
-				if(in_array('k', array_keys($options)))
+				if(isset($key))
 				{
-					if(is_array($options['k']))
+					if(is_array($key))
 					{
-						$keyc = count($options['k']);
+						$keyc = count($key);
 						while($keyc > 0)
 						{
-							if(!isset($vars[$options['t'][$tskc-1]]->task->$options['k'][$keyc-1]))
+							if(!isset($vars[$task[$tskc-1]]->task->$key[$keyc-1]))
 							{
-								echo "CRITICAL: No key ".$options['k'][$keyc-1]." in task ".$options['t'][$tskc-1]."\n";
+								echo "CRITICAL: No key ".$key[$keyc-1]." in task ".$task[$tskc-1]."\n";
 								return $STATE_CRITICAL;
 							}
 							$keyc--;
@@ -172,9 +207,9 @@
 					}
 					else 
 					{
-						if(!isset($vars[$options['t'][$tskc-1]]->task->$options['k']))
+						if(!isset($vars[$task[$tskc-1]]->task->$key))
 						{
-							echo "CRITICAL: No key ".$options['k'][$keyc-1]." in task ".$options['t'][$tskc-1]."\n";
+							echo "CRITICAL: No key ".$key[$keyc-1]." in task ".$task[$tskc-1]."\n";
 							return $STATE_CRITICAL;
 						}
 					}
@@ -184,21 +219,21 @@
 		}
 		else
 		{
-			if(!isset($vars[$options['t']]->task))
+			if(!isset($vars[$task]->task))
 			{
-				echo "CRITICAL: No task ".$options['t']."\n";
+				echo "CRITICAL: No task ".$task."\n";
 				return $STATE_CRITICAL;
 			}
-			if(in_array('k', array_keys($options)))
+			if(isset($key))
 			{
-				if(is_array($options['k']))
+				if(is_array($key))
 				{
-					$keyc = count($options['k']);
+					$keyc = count($key);
 					while($keyc > 0)
 					{
-						if(!isset($vars[$options['t']]->task->$options['k'][$keyc-1]))
+						if(!isset($vars[$task]->task->$key[$keyc-1]))
 						{
-							echo "CRITICAL: No key ".$options['k'][$keyc-1]." in task ".$options['t']."\n";
+							echo "CRITICAL: No key ".$key[$keyc-1]." in task ".$task."\n";
 							return $STATE_CRITICAL;
 						}
 						$keyc--;
@@ -206,14 +241,15 @@
 				}
 				else 
 				{
-					if(!isset($vars[$options['t']]->task->$options['k']))
+					if(!isset($vars[$task]->task->$key))
 					{
-						echo "CRITICAL: No key ".$options['k']." in task ".$options['t']."\n";
+						echo "CRITICAL: No key ".$key." in task ".$task."\n";
 						return $STATE_CRITICAL;
 					}
 				}
 			}
 		}
 	}
+
 	echo "OK: All Core API checks passed.\n";
 	return $STATE_OK;
