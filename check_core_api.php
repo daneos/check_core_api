@@ -117,6 +117,14 @@
 				return $STATE_CRITICAL;
 			}
 		}
+		if($options['q'] == '-0')
+		{
+			if($count > 0)
+			{
+				echo "CRITICAL: Suggestion count greater than 0\n";
+				return $STATE_CRITICAL;
+			}
+		}
 		else if($options['q'] < 0)
 		{
 			if($count > -$options['q'])
@@ -144,7 +152,7 @@
 	}
 	if(in_array('t', array_keys($options)))
 	{
-		$vars = get_object_vars($data->data);
+		$vars = $data->data;
 		if(is_array($options['t']))
 		{
 			$tskc = count($options['t']);

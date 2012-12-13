@@ -152,6 +152,14 @@
 				return $STATE_CRITICAL;
 			}
 		}
+		if($options['q'] == '-0')
+		{
+			if($count > 0)
+			{
+				echo "CRITICAL: Suggestion count greater than 0\n";
+				return $STATE_CRITICAL;
+			}
+		}
 		else if($qc < 0)
 		{
 			if($count > -$qc)
@@ -179,7 +187,7 @@
 	}
 	if(isset($task))
 	{
-		$vars = get_object_vars($data->data);
+		$vars = $data->data;
 		if(is_array($task))
 		{
 			$tskc = count($task);
